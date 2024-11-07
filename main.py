@@ -1,59 +1,106 @@
-import tkinter as tk
-from tkinter import messagebox
-from sqrEq import sqrEquation
+from tkinter import *
+from pygame import mixer
+from PIL import Image, ImageTk  # Импортируем необходимые модули из Pillow
+import string
+import random
 
+#-----------Работаем со звуком--------
+mixer.init()
 
-def close():
-    window.destroy()
+def play_music():
+    mixer.music.load("Playboi_Carti_Bryson_Tiller_-_Fell_In_Luv_55954079.mp3")
+    mixer.music.play(loops=-1)
 
+# ---------Класс для анимированного GIF-----------
+class AnimatedGIF(Label):
+    def __init__(self, master, path, width=None, height=None):
+        Label.__init__(self, master)
+        self.frames = []
+        self.width = width
+        self.height = height
+        self.load_gif(path)
+        self.index = 0
+        self.update()
 
-def calc():
-    A = float(arg_A.get())
-    B = float(arg_B.get())
-    C = float(arg_C.get())
-    if A == 0.0:
-        tk.messagebox.showwarning('Error', 'Division by zero!')
-    else:
-        lbl_result.configure(text=sqrEquation(A, B, C))
+    def load_gif(self, path):
+        img = Image.open(path)
+        for frame in range(img.n_frames):
+            img.seek(frame)
+            if self.width and self.height:
+                # Изменяем размер каждого кадра
+                img.thumbnail((self.width, self.height))
+            self.frames.append(ImageTk.PhotoImage(img.copy()))
 
+    def update(self):
+        self.configure(image=self.frames[self.index])
+        self.index += 1
+        if self.index >= len(self.frames):
+            self.index = 0
+        self.after(100, self.update)  # обновление каждые 100 мс
 
-window = tk.Tk()
-window.geometry('576x360')
-bg_img = tk.PhotoImage(file='bg_pic.png')
+# ---------Создаем "голое" окно-------
+window = Tk()
+width = 718
+height = 404
+window.title("Let's go")
+window.geometry(f"{width}x{height}+400+150")
 
-lbl_bg = tk.Label(window, image=bg_img)
+# ------------Создаем фон-----------
+background_image = Image.open('zeldabreath_fichavj.png')  # Загружаем изображение через PIL
+background_image = ImageTk.PhotoImage(background_image)  # Преобразуем в формат, поддерживаемый Tkinter
+
+lbl_bg = Label(window, image=background_image)
 lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
 
-frame = tk.Frame(window)
+# --------Создание фрейма, в котором будут хранится все метки-----------
+frame = Frame(window)
 frame.place(relx=0.5, rely=0.5, anchor='center')
 
-lbl_A = tk.Label(frame, text='A', font=('Arial', 30), bg='blue', fg='white')
-lbl_A.grid(column=0, row=0, padx=10, pady=15)
-arg_A = tk.Entry(frame, width=10)
-arg_A.insert(0, '1')
-arg_A.grid(column=0, row=1, padx=10, pady=15)
+# -------------Функция для сохранения значения из окна ввода-------------
+entry_var = StringVar()
 
-lbl_B = tk.Label(frame, text='B', font=('Arial', 30))
-lbl_B.grid(column=1, row=0, padx=10, pady=15)
-arg_B = tk.Entry(frame, width=10)
-arg_B.insert(0, '0')
-arg_B.grid(column=1, row=1, padx=10, pady=15)
+def save_entry_value():
+    saved_value = entry_var.get()
 
-lbl_C = tk.Label(frame, text='C', font=('Arial', 30))
-lbl_C.grid(column=2, row=0, padx=10, pady=15)
-arg_C = tk.Entry(frame, width=10)
-arg_C.insert(0, '0')
-arg_C.grid(column=2, row=1, padx=10, pady=15)
+    # Генерация случайных блоков
+    blocks = [''.join(random.choices(string.ascii_uppercase + string.digits, k=6)) for _ in range(len(saved_value))]
 
-lbl_roots = tk.Label(frame, text='Result:')
-lbl_roots.grid(column=1, row=2)
-lbl_result = tk.Label(frame, text='None yet.', font=('Arial', 10))
-lbl_result.grid(column=2, row=2)
+    # Функция для сдвига строки влево или вправо
+    def shift(s, n, direction):
+        return s[-n:] + s[:-n] if direction == 'right' else s[n:] + s[:n]
 
-btn_calc = tk.Button(frame, text='Calculate', command=calc)
-btn_calc.grid(column=0, row=3, padx=10, pady=15)
-btn_exit = tk.Button(frame, text='Cancel', command=close)
-btn_exit.grid(column=2, row=3, padx=10, pady=15)
+    # Генерация ключа с сдвигами
+    result = []
+    for i, block in enumerate(blocks):
+        shift_amount = int(saved_value[i])
+        direction = 'right' if i % 2 == 0 else 'left'
+        result.append(shift(block, shift_amount, direction))
+
+    # Отображение ключа
+    final_key = '-'.join(result)
+    lbl_result.configure(text=final_key)
 
 
-window.mainloop()
+
+# ----------Создаём надпись, которая будет пояснять, что именно нужно ввести------------------
+lbl_roots = Label(frame, text='Введите DEC-число в 3 знака')
+lbl_roots.grid(column=0, row=0)
+
+# ---------Создаем поле ввода-----------
+entry = Entry(frame, textvariable=entry_var, width=30)
+entry.grid(column=0, row=1, padx=10, pady=15)
+
+# ---------Создаем кнопку сохранения значения-----------
+save_button = Button(frame, text="Сгенерировать", command=save_entry_value)
+save_button.grid(column=1, row=1, padx=10, pady=15)
+
+# ---------------Сгенерированный ключ-----------
+lbl_result = Label(frame, text='Text me your code', font=('Arial', 10))
+lbl_result.grid(column=0, row=2)
+
+# -----------Добавление анимации GIF с изменением размера и центрированием-----------
+gif_animation = AnimatedGIF(frame, "200.gif", width=200, height=200)  # Уменьшаем до 200x200 пикселей
+gif_animation.grid(column=0, row=3, padx=10, pady=10)
+
+play_music() # включаем музыку
+window.mainloop()  # запускаем основной цикл
