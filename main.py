@@ -36,7 +36,7 @@ class AnimatedGIF(Label):
         self.index += 1
         if self.index >= len(self.frames):
             self.index = 0
-        self.after(100, self.update)  # обновление каждые 100 мс
+        self.after(100, self.update)
 
 # ---------Создаем "голое" окно-------
 window = Tk()
@@ -46,8 +46,8 @@ window.title("Let's go")
 window.geometry(f"{width}x{height}+400+150")
 
 # ------------Создаем фон-----------
-background_image = Image.open('zeldabreath_fichavj.png')  # Загружаем изображение через PIL
-background_image = ImageTk.PhotoImage(background_image)  # Преобразуем в формат, поддерживаемый Tkinter
+background_image = Image.open('zeldabreath_fichavj.png')
+background_image = ImageTk.PhotoImage(background_image)
 
 lbl_bg = Label(window, image=background_image)
 lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
@@ -61,22 +61,17 @@ entry_var = StringVar()
 
 def save_entry_value():
     saved_value = entry_var.get()
-
-    # Генерация случайных блоков
     blocks = [''.join(random.choices(string.ascii_uppercase + string.digits, k=6)) for _ in range(len(saved_value))]
 
-    # Функция для сдвига строки влево или вправо
     def shift(s, n, direction):
         return s[-n:] + s[:-n] if direction == 'right' else s[n:] + s[:n]
 
-    # Генерация ключа с сдвигами
     result = []
     for i, block in enumerate(blocks):
         shift_amount = int(saved_value[i])
         direction = 'right' if i % 2 == 0 else 'left'
         result.append(shift(block, shift_amount, direction))
 
-    # Отображение ключа
     final_key = '-'.join(result)
     lbl_result.configure(text=final_key)
 
@@ -99,8 +94,8 @@ lbl_result = Label(frame, text='Text me your code', font=('Arial', 10))
 lbl_result.grid(column=0, row=2)
 
 # -----------Добавление анимации GIF с изменением размера и центрированием-----------
-gif_animation = AnimatedGIF(frame, "200.gif", width=200, height=200)  # Уменьшаем до 200x200 пикселей
+gif_animation = AnimatedGIF(frame, "200.gif", width=200, height=200)
 gif_animation.grid(column=0, row=3, padx=10, pady=10)
 
-play_music() # включаем музыку
-window.mainloop()  # запускаем основной цикл
+play_music()
+window.mainloop()
